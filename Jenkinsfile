@@ -23,10 +23,13 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                        // Access app using the env variable
-                        env.app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
-                        env.app.push("${env.BRANCH_NAME}-latest")
-                        // signal the orchestrator that there is a new version
+                        // Use withCredentials to securely pass Docker credentials
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            docker.login(username: DOCKER_USERNAME, password: DOCKER_PASSWORD)
+                            // Access app using the env variable
+                            env.app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+                            env.app.push("${env.BRANCH_NAME}-latest")
+                        }
                     }
                 }
             }
