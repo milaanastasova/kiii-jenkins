@@ -11,7 +11,10 @@ pipeline {
         stage('Build image') {
             steps {
                 script {
+                    // Define app globally
                     def app = docker.build("milaanastasova/kiii-jenkins")
+                    // Set the app variable as environment variable to make it accessible across stages
+                    env.app = app
                 }
             }
         }
@@ -20,8 +23,9 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                        app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
-                        app.push("${env.BRANCH_NAME}-latest")
+                        // Access app using the env variable
+                        env.app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+                        env.app.push("${env.BRANCH_NAME}-latest")
                         // signal the orchestrator that there is a new version
                     }
                 }
