@@ -1,16 +1,18 @@
-def app
-
 pipeline {
     agent any
 
     stages {
-        // Define other stages here
+        stage('Clone repository') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Build image') {
             steps {
                 script {
-                    // Build the Docker image and assign it to the 'app' variable
-                    app = docker.build("milaanastasova/kiii-jenkins")
+                    // Build the Docker image
+                    docker.build("milaanastasova/kiii-jenkins")
                 }
             }
         }
@@ -19,9 +21,14 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
-                        // Access the 'app' variable and push the Docker image
-                        app.push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
-                        app.push("${env.BRANCH_NAME}-latest")
+                        // Use withCredentials to securely pass Docker credentials
+                        withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            // Login to Docker Hub
+                            docker.login(username: DOCKER_USERNAME, password: DOCKER_PASSWORD)
+                            // Push the image to Docker Hub
+                            docker.image("milaanastasova/kiii-jenkins").push("${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+                            docker.image("milaanastasova/kiii-jenkins").push("${env.BRANCH_NAME}-latest")
+                        }
                     }
                 }
             }
