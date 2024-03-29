@@ -9,6 +9,9 @@ pipeline {
         }
 
         stage('Build image') {
+            when {
+                branch 'dev' // Execute this stage only if changes are in the 'dev' branch
+            }
             steps {
                 script {
                     // Build the Docker image
@@ -18,6 +21,9 @@ pipeline {
         }
 
         stage('Push image') {
+            when {
+                branch 'dev' // Execute this stage only if changes are in the 'dev' branch
+            }
             steps {
                 script {
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerhub') {
